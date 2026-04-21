@@ -29,10 +29,10 @@ public class SensorResource {
     @POST
     public Response createSensor(Sensor sensor) {
         if (sensor.getId() == null || sensor.getId().trim().isEmpty()) {
-            throw new WebApplicationException("Sensor ID is required", 400);
+            throw new BadRequestException("Sensor ID is required");
         }
         if (DataStore.sensorExists(sensor.getId())) {
-            throw new WebApplicationException("Sensor with ID " + sensor.getId() + " already exists", 409);
+            throw new ClientErrorException("Sensor with ID " + sensor.getId() + " already exists", Response.Status.CONFLICT);
         }
         
         // Business Rule: Verify Room existence

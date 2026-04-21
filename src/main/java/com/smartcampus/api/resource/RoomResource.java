@@ -26,13 +26,13 @@ public class RoomResource {
     @POST
     public Response createRoom(Room room) {
         if (room.getId() == null || room.getId().trim().isEmpty()) {
-            throw new WebApplicationException("Room ID is required", 400);
+            throw new BadRequestException("Room ID is required");
         }
         if (DataStore.roomExists(room.getId())) {
-            throw new WebApplicationException("Room with ID " + room.getId() + " already exists", 409);
+            throw new ClientErrorException("Room with ID " + room.getId() + " already exists", Response.Status.CONFLICT);
         }
         if (room.getCapacity() <= 0) {
-            throw new WebApplicationException("Capacity must be positive", 400);
+            throw new BadRequestException("Capacity must be positive");
         }
 
         DataStore.addRoom(room);
