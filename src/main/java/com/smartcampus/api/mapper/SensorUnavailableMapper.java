@@ -1,10 +1,8 @@
 package com.smartcampus.api.mapper;
 
 import com.smartcampus.api.exception.SensorUnavailableException;
-import com.smartcampus.api.model.ErrorMessage;
 
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -25,19 +23,9 @@ public class SensorUnavailableMapper implements ExceptionMapper<SensorUnavailabl
 
     @Override
     public Response toResponse(SensorUnavailableException exception) {
-        LOGGER.log(Level.WARNING, "Forbidden: {0} at {1}", 
-            new Object[]{exception.getMessage(), uriInfo.getPath()});
+        LOGGER.log(Level.WARNING, "Forbidden at {0}: {1}",
+                new Object[]{ErrorResponseFactory.resolvePath(uriInfo), exception.getMessage()});
 
-        ErrorMessage error = new ErrorMessage(
-                Response.Status.FORBIDDEN.getStatusCode(),
-                "Forbidden",
-                exception.getMessage(),
-                uriInfo.getPath()
-        );
-
-        return Response.status(Response.Status.FORBIDDEN)
-                .entity(error)
-                .type(MediaType.APPLICATION_JSON)
-                .build();
+        return ErrorResponseFactory.build(Response.Status.FORBIDDEN, exception.getMessage(), uriInfo);
     }
 }

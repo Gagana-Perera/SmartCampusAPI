@@ -1,6 +1,7 @@
 package com.smartcampus.api.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ public class Room {
     private String id;
     private String name;
     private int capacity;
-    private List<String> sensorIds = new ArrayList<>();
+    private List<String> sensorIds = Collections.synchronizedList(new ArrayList<>());
 
     public Room() {}
 
@@ -49,7 +50,11 @@ public class Room {
     }
 
     public void setSensorIds(List<String> sensorIds) {
-        this.sensorIds = sensorIds;
+        if (sensorIds == null) {
+            this.sensorIds = Collections.synchronizedList(new ArrayList<>());
+            return;
+        }
+        this.sensorIds = Collections.synchronizedList(new ArrayList<>(sensorIds));
     }
 
     @Override

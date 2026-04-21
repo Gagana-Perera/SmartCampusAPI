@@ -1,12 +1,10 @@
 package com.smartcampus.api.mapper;
 
 import com.smartcampus.api.exception.LinkedResourceNotFoundException;
-import com.smartcampus.api.model.ErrorMessage;
 
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 import java.util.logging.Level;
@@ -25,19 +23,9 @@ public class LinkedResourceNotFoundMapper implements ExceptionMapper<LinkedResou
 
     @Override
     public Response toResponse(LinkedResourceNotFoundException exception) {
-        LOGGER.log(Level.WARNING, "Unprocessable Entity: {0} at {1}", 
-            new Object[]{exception.getMessage(), uriInfo.getPath()});
+        LOGGER.log(Level.WARNING, "Unprocessable entity at {0}: {1}",
+                new Object[]{ErrorResponseFactory.resolvePath(uriInfo), exception.getMessage()});
 
-        ErrorMessage error = new ErrorMessage(
-                422, // Unprocessable Entity
-                "Unprocessable Entity",
-                exception.getMessage(),
-                uriInfo.getPath()
-        );
-
-        return Response.status(422) // Semantically more accurate than 404
-                .entity(error)
-                .type(MediaType.APPLICATION_JSON)
-                .build();
+        return ErrorResponseFactory.build(422, "Unprocessable Entity", exception.getMessage(), uriInfo);
     }
 }

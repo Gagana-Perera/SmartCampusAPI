@@ -1,5 +1,7 @@
 package com.smartcampus.api.resource;
 
+import com.smartcampus.api.exception.InvalidRequestException;
+import com.smartcampus.api.exception.ResourceNotFoundException;
 import com.smartcampus.api.exception.SensorUnavailableException;
 import com.smartcampus.api.model.Sensor;
 import com.smartcampus.api.model.SensorReading;
@@ -18,7 +20,7 @@ import java.util.UUID;
 @Consumes(MediaType.APPLICATION_JSON)
 public class SensorReadingResource {
 
-    private String sensorId;
+    private final String sensorId;
 
     public SensorReadingResource(String sensorId) {
         this.sensorId = sensorId;
@@ -26,28 +28,49 @@ public class SensorReadingResource {
 
     @GET
     public List<SensorReading> getReadingHistory() {
+        requireSensor();
         return DataStore.getReadingsForSensor(sensorId);
     }
 
     @POST
     public Response addReading(SensorReading reading) {
-        Sensor sensor = DataStore.getSensor(sensorId);
-        
+        Sensor sensor = requireSensor();
+
         // Business Rule: Check status
         if ("MAINTENANCE".equalsIgnoreCase(sensor.getStatus())) {
             throw new SensorUnavailableException("Sensor " + sensorId + " is currently in MAINTENANCE mode and cannot accept new readings.");
         }
 
-        // Set missing fields
-        if (reading.getId() == null) {
-            reading.setId(UUID.randomUUID().toString());
+        SensorReading normalizedReading = normalizeReading(reading);
+        DataStore.addReading(sensorId, normalizedReading);
+
+        return Response.status(Response.Status.CREATED).entity(normalizedReading).build();
+    }
+
+    private Sensor requireSensor() {
+        Sensor sensor = DataStore.getSensor(sensorId);
+        if (sensor == null) {
+            throw new ResourceNotFoundException("Sensor with ID " + sensorId + " not found");
         }
-        if (reading.getTimestamp() == 0) {
-            reading.setTimestamp(System.currentTimeMillis());
+        return sensor;
+    }
+
+    private SensorReading normalizeReading(SensorReading reading) {
+        if (reading == null) {
+            throw new InvalidRequestException("Request body is required.");
+        }
+        if (reading.getTimestamp() < 0) {
+            throw new InvalidRequestException("Reading timestamp must not be negative.");
         }
 
-        DataStore.addReading(sensorId, reading);
-        
-        return Response.status(Response.Status.CREATED).entity(reading).build();
+        SensorReading normalizedReading = new SensorReading();
+        normalizedReading.setId(isBlank(reading.getId()) ? UUID.randomUUID().toString() : reading.getId().trim());
+        normalizedReading.setTimestamp(reading.getTimestamp() > 0 ? reading.getTimestamp() : System.currentTimeMillis());
+        normalizedReading.setValue(reading.getValue());
+        return normalizedReading;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }

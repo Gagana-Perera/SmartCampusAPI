@@ -1,10 +1,7 @@
 package com.smartcampus.api.mapper;
 
-import com.smartcampus.api.model.ErrorMessage;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -26,21 +23,17 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplica
     @Override
     public Response toResponse(WebApplicationException exception) {
         Response response = exception.getResponse();
-        int status = response.getStatus();
-        
-        LOGGER.log(Level.INFO, "API Client Error [{0}]: {1} at {2}", 
-            new Object[]{status, exception.getMessage(), uriInfo.getPath()});
+        int status = response == null ? Response.Status.INTERNAL_SERVER_ERROR.getStatusCode() : response.getStatus();
+        String error = response == null ? "Internal Server Error" : response.getStatusInfo().getReasonPhrase();
+        String message = exception.getMessage();
 
-        ErrorMessage error = new ErrorMessage(
-                status,
-                response.getStatusInfo().getReasonPhrase(),
-                exception.getMessage(),
-                uriInfo.getPath()
-        );
+        if (message == null || message.trim().isEmpty()) {
+            message = error;
+        }
 
-        return Response.fromResponse(response)
-                .entity(error)
-                .type(MediaType.APPLICATION_JSON)
-                .build();
+        LOGGER.log(Level.INFO, "Web application exception at {0}: {1}",
+                new Object[]{ErrorResponseFactory.resolvePath(uriInfo), message});
+
+        return ErrorResponseFactory.build(status, error, message, uriInfo);
     }
 }

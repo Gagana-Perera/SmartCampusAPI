@@ -1,13 +1,18 @@
 package com.smartcampus.api.resource;
 
+import com.smartcampus.api.exception.DuplicateResourceException;
+import com.smartcampus.api.exception.InvalidRequestException;
 import com.smartcampus.api.exception.LinkedResourceNotFoundException;
 import com.smartcampus.api.exception.ResourceNotFoundException;
 import com.smartcampus.api.model.Sensor;
 import com.smartcampus.api.repository.DataStore;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -18,30 +23,36 @@ import java.util.List;
 @Consumes(MediaType.APPLICATION_JSON)
 public class SensorResource {
 
+    @Context
+    private UriInfo uriInfo;
+
     @GET
     public List<Sensor> getSensors(@QueryParam("type") String type) {
-        if (type != null && !type.isEmpty()) {
-            return DataStore.getSensorsByType(type);
+        String normalizedType = normalize(type);
+        if (normalizedType != null) {
+            return DataStore.getSensorsByType(normalizedType);
         }
         return DataStore.getAllSensors();
     }
 
     @POST
     public Response createSensor(Sensor sensor) {
-        if (sensor.getId() == null || sensor.getId().trim().isEmpty()) {
-            throw new BadRequestException("Sensor ID is required");
-        }
-        if (DataStore.sensorExists(sensor.getId())) {
-            throw new ClientErrorException("Sensor with ID " + sensor.getId() + " already exists", Response.Status.CONFLICT);
-        }
-        
-        // Business Rule: Verify Room existence
-        if (!DataStore.roomExists(sensor.getRoomId())) {
-            throw new LinkedResourceNotFoundException("Cannot create sensor. Room with ID " + sensor.getRoomId() + " does not exist.");
+        Sensor normalizedSensor = validateAndNormalize(sensor);
+
+        if (DataStore.sensorExists(normalizedSensor.getId())) {
+            throw new DuplicateResourceException("Sensor with ID " + normalizedSensor.getId() + " already exists.");
         }
 
-        DataStore.addSensor(sensor);
-        return Response.status(Response.Status.CREATED).entity(sensor).build();
+        // Business Rule: Verify Room existence
+        if (!DataStore.roomExists(normalizedSensor.getRoomId())) {
+            throw new LinkedResourceNotFoundException(
+                    "Cannot create sensor. Room with ID " + normalizedSensor.getRoomId() + " does not exist."
+            );
+        }
+
+        DataStore.addSensor(normalizedSensor);
+        URI location = uriInfo.getAbsolutePathBuilder().path(normalizedSensor.getId()).build();
+        return Response.created(location).entity(normalizedSensor).build();
     }
 
     @GET
@@ -64,5 +75,41 @@ public class SensorResource {
             throw new ResourceNotFoundException("Sensor with ID " + sensorId + " not found");
         }
         return new SensorReadingResource(sensorId);
+    }
+
+    private Sensor validateAndNormalize(Sensor sensor) {
+        if (sensor == null) {
+            throw new InvalidRequestException("Request body is required.");
+        }
+
+        String id = normalize(sensor.getId());
+        String type = normalize(sensor.getType());
+        String status = normalize(sensor.getStatus());
+        String roomId = normalize(sensor.getRoomId());
+
+        if (id == null) {
+            throw new InvalidRequestException("Sensor id must not be blank.");
+        }
+        if (type == null) {
+            throw new InvalidRequestException("Sensor type must not be blank.");
+        }
+        if (status == null) {
+            throw new InvalidRequestException("Sensor status must not be blank.");
+        }
+        if (roomId == null) {
+            throw new InvalidRequestException("Sensor roomId must not be blank.");
+        }
+
+        Sensor normalizedSensor = new Sensor(id, type, status, roomId);
+        normalizedSensor.setCurrentValue(sensor.getCurrentValue());
+        return normalizedSensor;
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

@@ -20,16 +20,13 @@ public class LoggingFilter implements ContainerRequestFilter, ContainerResponseF
     public void filter(ContainerRequestContext requestContext) throws IOException {
         String method = requestContext.getMethod();
         String uri = requestContext.getUriInfo().getRequestUri().toString();
-        
-        LOGGER.info(String.format(">>> [REQUEST] %s %s", method, uri));
+
+        LOGGER.info(String.format("Request: %s %s", method, uri));
     }
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
         int status = responseContext.getStatus();
-        String method = requestContext.getMethod();
-        String uri = requestContext.getUriInfo().getRequestUri().toString();
-
-        LOGGER.info(String.format("<<< [RESPONSE] %s %s - STATUS: %d", method, uri, status));
+        LOGGER.info(String.format("Response: %d", status));
     }
 }

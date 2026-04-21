@@ -1,10 +1,8 @@
 package com.smartcampus.api.mapper;
 
 import com.smartcampus.api.exception.RoomNotEmptyException;
-import com.smartcampus.api.model.ErrorMessage;
 
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -25,19 +23,9 @@ public class RoomNotEmptyMapper implements ExceptionMapper<RoomNotEmptyException
 
     @Override
     public Response toResponse(RoomNotEmptyException exception) {
-        LOGGER.log(Level.WARNING, "Conflict: {0} at {1}", 
-            new Object[]{exception.getMessage(), uriInfo.getPath()});
+        LOGGER.log(Level.WARNING, "Conflict at {0}: {1}",
+                new Object[]{ErrorResponseFactory.resolvePath(uriInfo), exception.getMessage()});
 
-        ErrorMessage error = new ErrorMessage(
-                Response.Status.CONFLICT.getStatusCode(),
-                "Conflict",
-                exception.getMessage(),
-                uriInfo.getPath()
-        );
-
-        return Response.status(Response.Status.CONFLICT)
-                .entity(error)
-                .type(MediaType.APPLICATION_JSON)
-                .build();
+        return ErrorResponseFactory.build(Response.Status.CONFLICT, exception.getMessage(), uriInfo);
     }
 }

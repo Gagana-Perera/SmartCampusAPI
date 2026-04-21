@@ -1,10 +1,8 @@
 package com.smartcampus.api.mapper;
 
 import com.smartcampus.api.exception.ResourceNotFoundException;
-import com.smartcampus.api.model.ErrorMessage;
 
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -25,19 +23,9 @@ public class ResourceNotFoundMapper implements ExceptionMapper<ResourceNotFoundE
 
     @Override
     public Response toResponse(ResourceNotFoundException exception) {
-        LOGGER.log(Level.INFO, "Not Found: {0} at {1}", 
-            new Object[]{exception.getMessage(), uriInfo.getPath()});
+        LOGGER.log(Level.INFO, "Not found at {0}: {1}",
+                new Object[]{ErrorResponseFactory.resolvePath(uriInfo), exception.getMessage()});
 
-        ErrorMessage error = new ErrorMessage(
-                Response.Status.NOT_FOUND.getStatusCode(),
-                "Not Found",
-                exception.getMessage(),
-                uriInfo.getPath()
-        );
-
-        return Response.status(Response.Status.NOT_FOUND)
-                .entity(error)
-                .type(MediaType.APPLICATION_JSON)
-                .build();
+        return ErrorResponseFactory.build(Response.Status.NOT_FOUND, exception.getMessage(), uriInfo);
     }
 }
