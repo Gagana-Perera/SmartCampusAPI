@@ -7,6 +7,9 @@
     <groupId>com.smartcampus</groupId>
     <artifactId>smart-campus-api</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <name>smart-campus-api</name>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -71,6 +74,21 @@
             <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Jersey Servlet Container (Required for Tomcat) -->
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
+
+        <!-- Servlet API (Provided by Tomcat) -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -102,6 +120,17 @@
                     <mainClass>com.smartcampus.api.Main</mainClass>
                 </configuration>
             </plugin>
+
+            <!-- WAR Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
         </plugins>
+        <finalName>smart-campus-api</finalName>
     </build>
 </project>

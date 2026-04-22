@@ -22,12 +22,12 @@ The API supports discovery, room management, sensor management, sensor filtering
 - Java 11 or newer
 - Maven 3.8 or newer
 
-## Build
 ```bash
 ./mvnw clean package
 ```
+This will generate `target/smart-campus-api.war` for Tomcat and a runnable JAR for Grizzly.
 
-## Run
+### Option A: Embedded Grizzly (Standalone)
 ```bash
 ./mvnw exec:java
 ```
@@ -40,8 +40,12 @@ To enable the demo-only `500` endpoint during a recording:
 ./mvnw -Dsmartcampus.demoMode=true exec:java
 ```
 
-If port `8080` is unavailable, you can override the base URI:
+### Option B: Deploy to Tomcat (WAR)
+1. Build the project: `./mvnw clean package`
+2. Copy `target/smart-campus-api.war` to your Tomcat `webapps/` directory.
+3. Access the API at `http://localhost:8080/smart-campus-api/api/v1/`
 
+If port `8080` is unavailable, you can override the base URI for Grizzly:
 ```bash
 ./mvnw -Dsmartcampus.baseUri=http://localhost:8081/api/v1/ exec:java
 ```
