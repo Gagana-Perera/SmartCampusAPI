@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * Uses thread-safe collections to handle concurrent API requests.
  */
 public class DataStore {
-    
+
     // Storage maps
     private static final Map<String, Room> rooms = new ConcurrentHashMap<>();
     private static final Map<String, Sensor> sensors = new ConcurrentHashMap<>();
@@ -25,6 +25,17 @@ public class DataStore {
 
     // Static initializer for sample data
     static {
+        resetToDefaults();
+    }
+
+    private DataStore() {
+    }
+
+    public static synchronized void resetToDefaults() {
+        rooms.clear();
+        sensors.clear();
+        sensorReadings.clear();
+
         // Preload sample room
         Room lib301 = new Room("LIB-301", "Library Quiet Study", 50);
         addRoom(lib301);
