@@ -6,11 +6,6 @@ SmartCampusAPI is a RESTful web service for managing rooms, sensors, and nested 
 
 The API supports discovery, room management, sensor management, sensor filtering, nested reading history, custom exception mapping, request/response logging, and a gated demo-only `500` trigger for coursework demonstrations.
 
-## Coursework Documents
-
-- [Coursework report](docs/coursework-report.md)
-- [Demo checklist](docs/demo-checklist.md)
-
 ## Technologies Used
 
 - Java 11

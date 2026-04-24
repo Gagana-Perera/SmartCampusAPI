@@ -26,6 +26,12 @@ public class SensorResource {
     @Context
     private UriInfo uriInfo;
 
+    /**
+     * Retrieves sensors, optionally filtered by type.
+     * 
+     * @param type Optional query parameter to filter by sensor type (e.g., "Temperature").
+     * @return 200 OK with list of matching Sensor objects.
+     */
     @GET
     public List<Sensor> getSensors(@QueryParam("type") String type) {
         String normalizedType = normalize(type);
@@ -35,6 +41,15 @@ public class SensorResource {
         return DataStore.getAllSensors();
     }
 
+    /**
+     * Creates a new sensor and links it to a room.
+     * 
+     * @param sensor The sensor object to create.
+     * @return 201 Created with the new sensor.
+     * @throws DuplicateResourceException 409 Conflict if sensor ID already exists.
+     * @throws LinkedResourceNotFoundException 422 Unprocessable Entity if the specified roomId doesn't exist.
+     * @throws InvalidRequestException 400 Bad Request if validation fails.
+     */
     @POST
     public Response createSensor(Sensor sensor) {
         Sensor normalizedSensor = validateAndNormalize(sensor);
@@ -55,6 +70,13 @@ public class SensorResource {
         return Response.created(location).entity(normalizedSensor).build();
     }
 
+    /**
+     * Retrieves a specific sensor by ID.
+     * 
+     * @param sensorId The unique ID of the sensor.
+     * @return 200 OK with the Sensor object.
+     * @throws ResourceNotFoundException 404 Not Found if sensor doesn't exist.
+     */
     @GET
     @Path("/{sensorId}")
     public Sensor getSensor(@PathParam("sensorId") String sensorId) {
@@ -67,6 +89,11 @@ public class SensorResource {
 
     /**
      * Sub-resource locator for readings history.
+     * This delegates requests for nested reading resources to SensorReadingResource.
+     * 
+     * @param sensorId The parent sensor ID.
+     * @return A new instance of SensorReadingResource.
+     * @throws ResourceNotFoundException 404 Not Found if parent sensor doesn't exist.
      */
     @Path("/{sensorId}/readings")
     public SensorReadingResource getReadingsResource(@PathParam("sensorId") String sensorId) {

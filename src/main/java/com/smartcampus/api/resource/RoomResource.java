@@ -26,11 +26,24 @@ public class RoomResource {
     @Context
     private UriInfo uriInfo;
 
+    /**
+     * Retrieves all rooms in the campus.
+     * 
+     * @return 200 OK with list of Room objects.
+     */
     @GET
     public List<Room> getAllRooms() {
         return DataStore.getAllRooms();
     }
 
+    /**
+     * Creates a new room.
+     * 
+     * @param room The room object to create.
+     * @return 201 Created with the new room and Location header.
+     * @throws DuplicateResourceException 409 Conflict if room ID already exists.
+     * @throws InvalidRequestException 400 Bad Request if validation fails.
+     */
     @POST
     public Response createRoom(Room room) {
         Room normalizedRoom = validateAndNormalize(room);
@@ -44,6 +57,13 @@ public class RoomResource {
         return Response.created(location).entity(normalizedRoom).build();
     }
 
+    /**
+     * Retrieves a specific room by ID.
+     * 
+     * @param roomId The unique ID of the room.
+     * @return 200 OK with the Room object.
+     * @throws ResourceNotFoundException 404 Not Found if room doesn't exist.
+     */
     @GET
     @Path("/{roomId}")
     public Room getRoom(@PathParam("roomId") String roomId) {
@@ -54,6 +74,14 @@ public class RoomResource {
         return room;
     }
 
+    /**
+     * Deletes a room by ID.
+     * Operation is idempotent; deleting a non-existent room returns success.
+     * 
+     * @param roomId The unique ID of the room.
+     * @return 204 No Content on success.
+     * @throws RoomNotEmptyException 409 Conflict if sensors are still assigned to the room.
+     */
     @DELETE
     @Path("/{roomId}")
     public Response deleteRoom(@PathParam("roomId") String roomId) {

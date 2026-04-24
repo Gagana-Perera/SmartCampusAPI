@@ -26,17 +26,30 @@ public class SensorReadingResource {
         this.sensorId = sensorId;
     }
 
+    /**
+     * Retrieves the history of readings for the parent sensor.
+     * 
+     * @return 200 OK with list of SensorReading objects.
+     */
     @GET
     public List<SensorReading> getReadingHistory() {
         requireSensor();
         return DataStore.getReadingsForSensor(sensorId);
     }
 
+    /**
+     * Records a new reading for the sensor.
+     * 
+     * @param reading The reading to add.
+     * @return 201 Created with the recorded reading.
+     * @throws SensorUnavailableException 403 Forbidden if sensor is in MAINTENANCE.
+     * @throws InvalidRequestException 400 Bad Request if validation fails.
+     */
     @POST
     public Response addReading(SensorReading reading) {
         Sensor sensor = requireSensor();
 
-        // Business Rule: Check status
+        // Business Rule: Check status - MAINTENANCE sensors cannot accept new readings
         if ("MAINTENANCE".equalsIgnoreCase(sensor.getStatus())) {
             throw new SensorUnavailableException("Sensor " + sensorId + " is currently in MAINTENANCE mode and cannot accept new readings.");
         }
